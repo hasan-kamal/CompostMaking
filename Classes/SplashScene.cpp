@@ -9,6 +9,7 @@
 #include "SplashScene.hpp"
 #include "StartScene.hpp"
 #include "Colors.hpp"
+#include "SplashSceneTwo.hpp"
 #include <iostream>
 
 using namespace cocos2d;
@@ -46,14 +47,14 @@ bool SplashScene::init()
     background->drawSolidRect(origin, Vec2(origin.x + visibleSize.width, origin.y + visibleSize.height), Colors::white);
     this->addChild(background);
     
-    
+    //iiit_logo
     auto sprite_logo = Sprite::create("iiitd_logo_alpha.png");
-    sprite_logo->setScale(visibleSize.height*8.0/100.0/sprite_logo->getContentSize().height);
+    sprite_logo->setScale(visibleSize.height*10.0/100.0/sprite_logo->getContentSize().height);
     sprite_logo->setAnchorPoint(Vec2(0.5, 0.5));
-    sprite_logo->setPosition(Vec2(origin.x + visibleSize.width/2, origin.y + visibleSize.height/2));
+    sprite_logo->setPosition(Vec2(origin.x + visibleSize.width/2, origin.y + visibleSize.height*50.0/100.0));
     
     this->addChild(sprite_logo);
-    this->schedule(schedule_selector(SplashScene::updateTimer), 3.0f);
+    this->schedule(schedule_selector(SplashScene::updateTimer), 2.0f);
     
     return true;
 }
@@ -61,6 +62,6 @@ bool SplashScene::init()
 void SplashScene::updateTimer(float dt){
     this->unschedule(schedule_selector(SplashScene::updateTimer));
     
-    auto startScene = StartScene::createScene();
+    auto startScene = SplashSceneTwo::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(1.0, startScene, Color3B(Colors::clouds)));
 }

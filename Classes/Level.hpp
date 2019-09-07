@@ -14,9 +14,18 @@
 using namespace cocos2d;
 using namespace std;
 
+struct obj{
+    string image_path;
+    string hint_sound_path_english;
+    string hint_sound_path_hindi;
+    bool is_biodegradable;
+    int level_number;
+};
+
 class Level{
 public:
-    static const vector<pair<vector<string>, vector<string> > > images;
+    //static const vector<pair<vector<string>, vector<string> > > images;
+    static const vector<obj> objects;
     static const int max_level_number;
 };
 

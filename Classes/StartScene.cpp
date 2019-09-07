@@ -8,10 +8,14 @@
 
 #include "StartScene.hpp"
 #include "GameScene.hpp"
+#include "GameSceneCompost.hpp"
 #include "Colors.hpp"
 #include <iostream>
 #include "SimpleAudioEngine.h"
 #include "GlobalSettings.hpp"
+#include "SettingsScene.hpp"
+#include "Statistics.hpp"
+#include "DatabaseScene.hpp"
 
 using namespace cocos2d;
 using namespace std;
@@ -59,19 +63,30 @@ bool StartScene::init()
     closeItem->setPosition(Vec2(origin.x + visibleSize.width - padding ,
                                 origin.y + padding));
     
+    auto db_item = MenuItemImage::create("db_icon.png", "db_icon.png", CC_CALLBACK_1(StartScene::db_callback, this));
+    db_item->setAnchorPoint(Vec2(0.0, 0.0));
+    db_item->setScale(visibleSize.height*6.0/100.0/db_item->getContentSize().height);
+    db_item->setPosition(Vec2(origin.x + padding, origin.y + padding));
+    
     auto settings_item = MenuItemImage::create("settings.png", "settings.png", CC_CALLBACK_1(StartScene::settings_callback, this));
     settings_item->setAnchorPoint(Vec2(0.0, 0.0));
     settings_item->setScale(visibleSize.height*6.0/100.0/settings_item->getContentSize().height);
-    settings_item->setPosition(Vec2(origin.x + padding, origin.y + padding));
+    settings_item->setPosition(Vec2(origin.x + db_item->getContentSize().width*db_item->getScale() + padding*2.0, origin.y + padding));
     
-    auto play_item = MenuItemImage::create("resume.png", "resume.png", CC_CALLBACK_1(StartScene::play_callback, this));
-    play_item->setAnchorPoint(Vec2(0.5, 0.5));
-    play_item->setScale(visibleSize.height*15.0/100/play_item->getContentSize().height);
-    play_item->setOpacity(150);
-    play_item->setPosition(Vec2(origin.x + visibleSize.width/2, origin.y + visibleSize.height*25.0/100.0));
+    auto play_compost_item = MenuItemImage::create("resume.png", "resume.png", CC_CALLBACK_1(StartScene::play_compost_callback, this));
+    play_compost_item->setAnchorPoint(Vec2(0.5, 0.5));
+    play_compost_item->setScale(visibleSize.height*15.0/100/play_compost_item->getContentSize().height);
+    play_compost_item->setOpacity(150);
+    play_compost_item->setPosition(Vec2(origin.x + visibleSize.width*67.0/100, origin.y + visibleSize.height*25.0/100.0));
     
+    auto play_bio_item = MenuItemImage::create("resume.png", "resume.png", CC_CALLBACK_1(StartScene::play_bio_callback, this));
+    play_bio_item->setAnchorPoint(Vec2(0.5, 0.5));
+    play_bio_item->setScale(visibleSize.height*15.0/100/play_bio_item->getContentSize().height);
+    play_bio_item->setOpacity(150);
+    play_bio_item->setPosition(Vec2(origin.x + visibleSize.width*33.0/100, origin.y + visibleSize.height*25.0/100.0));
+
     // create menu, it's an autorelease object
-    auto menu = Menu::create(closeItem, settings_item, play_item, NULL);
+    auto menu = Menu::create(closeItem, db_item, settings_item, play_compost_item, play_bio_item, NULL);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
     
@@ -85,31 +100,107 @@ bool StartScene::init()
     sprite_logo->setPosition(Vec2(visibleSize.width/2, visibleSize.height/2));
     
     //label
-    auto label = Label::createWithTTF("Compost Identification", "fonts/Trirong-Light.ttf", 20);
+    auto label = Label::createWithTTF("CompostMaking", "fonts/Trirong-Light.ttf", 30);
     label->setAnchorPoint(Vec2(0.5, 0.0));
     label->setPosition(Vec2(origin.x + visibleSize.width/2,
                             origin.y + visibleSize.height*70.0/100.0));
     label->setTextColor(Color4B(Colors::asbestos));
     this->addChild(label);
     
+    //version
+    auto version_label = Label::createWithTTF("v4(beta)", "fonts/Trirong-Light.ttf", 10);
+    version_label->setAnchorPoint(Vec2(0.5, 1.0));
+    version_label->setPosition(Vec2(origin.x + visibleSize.width/2, origin.y + visibleSize.height*75/100));
+    version_label->setTextColor(Color4B(Colors::asbestos));
+    this->addChild(version_label);
+    
+    //prompt
+    auto prompt_label = Label::createWithTTF("*Select Mode*", "fonts/Trirong-Light.ttf", 13);
+    prompt_label->setAnchorPoint(Vec2(0.5, 1.0));
+    prompt_label->setPosition(Vec2(origin.x + visibleSize.width/2, origin.y + visibleSize.height*70/100));
+    prompt_label->setTextColor(Color4B(Colors::asbestos));
+    //this->addChild(prompt_label);
+    
     //pot sprite
     auto pot_sprite = Sprite::create("brown_pot_png.png");
-    pot_sprite->setScale(visibleSize.height*30.0/100.0/pot_sprite->getContentSize().height);
+    pot_sprite->setScale(visibleSize.height*25.0/100.0/pot_sprite->getContentSize().height);
     pot_sprite->setAnchorPoint(Vec2(0.5, 0.5));
-    pot_sprite->setPosition(Vec2(origin.x + visibleSize.width/2, origin.y + visibleSize.height/2));
+    pot_sprite->setPosition(Vec2(origin.x + visibleSize.width*67.0/100.0, origin.y + visibleSize.height/2));
     this->addChild(pot_sprite);
+    
+    //pot label
+    auto compost_label = Label::createWithTTF("compost/non-compost mode", "fonts/Trirong-Light.ttf", 10);
+    compost_label->setAnchorPoint(Vec2(0.5, 1.0));
+    compost_label->setPosition(Vec2(origin.x + visibleSize.width*67.0/100.0, origin.y + visibleSize.height*38/100));
+    compost_label->setTextColor(Color4B(Colors::asbestos));
+    this->addChild(compost_label);
+    
+    //leaf sprite
+    auto leaf_sprite = Sprite::create("green_blue_tray.png");
+    leaf_sprite->setScale(visibleSize.height*23.0/100.0/leaf_sprite->getContentSize().height);
+    leaf_sprite->setAnchorPoint(Vec2(0.5, 0.5));
+    leaf_sprite->setPosition(Vec2(origin.x + visibleSize.width*33.0/100.0, origin.y + visibleSize.height/2));
+    this->addChild(leaf_sprite);
+    
+    //pot label
+    auto bio_label = Label::createWithTTF("biodeg/non-biodeg mode", "fonts/Trirong-Light.ttf", 10);
+    bio_label->setAnchorPoint(Vec2(0.5, 1.0));
+    bio_label->setPosition(Vec2(origin.x + visibleSize.width*33.0/100.0, origin.y + visibleSize.height*38/100));
+    bio_label->setTextColor(Color4B(Colors::asbestos));
+    this->addChild(bio_label);
+    
+    //textFieldInputLayer
+    textFieldInputLayer = TextFieldInputLayer::create(this);
+    this->addChild(textFieldInputLayer, 5);
+    
+    cout<<endl;
+    cout<<Statistics::get_stat()<<endl;
     
     return true;
 }
 
 void StartScene::settings_callback(cocos2d::Ref *pSender){
     CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(GlobalSettings::click.c_str());
+    auto settingsScene = SettingsScene::createScene();
+    Director::getInstance()->pushScene(TransitionFade::create(1.0, settingsScene, Color3B(Colors::clouds)));
 }
 
-void StartScene::play_callback(cocos2d::Ref *pSender){
+void StartScene::db_callback(cocos2d::Ref *pSender){
     CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(GlobalSettings::click.c_str());
-    auto gameScene = GameScene::createScene();
-    Director::getInstance()->replaceScene(TransitionFade::create(1.0, gameScene, Color3B(Colors::clouds)));
+    auto dbScene = DatabaseScene::createScene();
+    Director::getInstance()->pushScene(TransitionFade::create(1.0, dbScene, Color3B(Colors::clouds)));
+}
+
+void StartScene::play_compost_callback(cocos2d::Ref *pSender){
+    CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(GlobalSettings::click.c_str());
+    bio_mode = false;
+    Statistics::player_name="";
+    textFieldInputLayer->show();
+    //auto gameSceneCompost = GameSceneCompost::createScene();
+    //Director::getInstance()->replaceScene(TransitionFade::create(1.0, gameSceneCompost, Color3B(Colors::clouds)));
+}
+
+void StartScene::play_bio_callback(cocos2d::Ref *pSender){
+    CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(GlobalSettings::click.c_str());
+    bio_mode = true;
+    Statistics::player_name="";
+    textFieldInputLayer->show();
+    //auto gameScene = GameScene::createScene();
+    //Director::getInstance()->replaceScene(TransitionFade::create(1.0, gameScene, Color3B(Colors::clouds)));
+}
+
+void StartScene::start(string student_name){
+    cout<<student_name<<endl;
+    Statistics::player_name = student_name;
+    if(bio_mode){
+        Statistics::is_bio = true;
+        auto gameScene = GameScene::createScene();
+        Director::getInstance()->replaceScene(TransitionFade::create(1.0, gameScene, Color3B(Colors::clouds)));
+    }else{
+        Statistics::is_bio = false;
+        auto gameSceneCompost = GameSceneCompost::createScene();
+        Director::getInstance()->replaceScene(TransitionFade::create(1.0, gameSceneCompost, Color3B(Colors::clouds)));
+    }
 }
 
 void StartScene::menuCloseCallback(Ref* pSender)

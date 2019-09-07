@@ -29,6 +29,7 @@ public:
     // implement the "static create()" method manually
     CREATE_FUNC(CharacterLayer);
     
+    
     void show_standing();
     void show_sad_expression();
     void show_happy_jump();
